@@ -334,17 +334,153 @@ Given a perfect-recall game, an acylic abstract game, a mapping between the two 
 
 Rest of the talk: theorems apply to 2-player, 0-sum games, but they're intended to apply to more general games. \\
 
-Counterfactual regret minimization (CRM): used by every top poker AI in the past 5 years. Used a tabular form of CFR and abstraction before equilibrium finding. \\
+Counterfactual regret minimization (CFR): used by every top poker AI in the past 5 years. Used a tabular form of CFR and abstraction before equilibrium finding. \\
 
-$\ra$ Next up they introduce a function approximator for use in CRM. \\
+$\ra$ Next up they introduce a function approximator for use in CFR (leads to ``Deep CFR"). \\
 
 Chicken-and-egg problem with abstractions: hard to pick an abstraction without knowing the equilibria, but hard to find the equilbiria without using an abstraction. \\
 
 $\ra$ Solution: do both simultaneously! \\
 
-Monto Carlo CRM~\cite{lanctot2009monte}:
+Monto Carlo CFR~\cite{lanctot2009monte}:
 \begin{itemize}
-    \item Action regret is how much better we would have done had we alwasy picked this action in this situation in the past.
-    \item Always pick action proportional to {\it positive regret}.
-    \item 
+    \item Action regret is how much better we would have done had we always picked this action in this situation in the past.
+    \item Do Monte Carlo roll outs, always pick action proportional to {\it positive regret}.
 \end{itemize}
+
+\subsubection{Finding Nash Equilibria}
+
+{\bf Motivation:} Previous fastest solver is CFR+, but has some sever limitations (namely: requires a huge number of iterations to pick the right action early ). \\
+
+$\ra$ Gives rise to linear CFR, which is a dramatically more efficient method than CFR (from 500,000 iterations to around a few hundred). \\
+
+Two ideas:
+\begin{enumerate}
+    \item Linear CFR: Weight iteration by recency for efficiency gains
+    \item CFR+: floor regrets at zero
+\end{enumerate}
+
+Q: Can we combine them? \\
+
+A: Theory $\ra$ yes! Practice $\ra$ no. \\
+
+But, less aggressive combinations do well. This yields discounted CFR, which combines good aspects of each of these things. \\
+
+Conducted experiments in Heads-Up No-Limit Texas hold'em (henceforth "texas") $\ra$ DCFR and LCFR both dominate nearly all other strategies. \\
+
+Q: What about Monte-Carlo variants? \\
+
+A: Doesn't mix well with DCFR, but does mix with linear CFR quite well. \\
+
+{\bf Limitations of CFR:}
+\begin{itemize}
+    \item Usually for 2 player games
+    \item Only works with linear loss
+    \item Doesn't support behavioral constraints
+\end{itemize}
+Next up: they'll fix all three of these. \\
+
+Consider the ``sequential decision making" strategy space~\cite{farina2018online}. \\
+
+Idea: define a local notion of regret $\hat{R}$ at each decision point of the player.
+
+\begin{theorem}
+We can get an extension of the usual result of CFR but for any convex loss function (not just linear) based on the local regret:
+\[
+R^T = \ldots \leq \max_x \sum_{j \in J} \pi_j(x) \hat{R}_j^T
+\]
+\end{theorem}
+
+This new framework is much more general and can be applied to a variety of new applications. \\
+
+{\bf Hot Off the Press:}
+\begin{itemize}
+    \item {\it Regret Circuits:} compositional calculus of regret minimizers.
+    
+    $\ra$ Can support strategy constraints that cut across ``infoset"s.
+    
+    \item {\it Breaking the complexity barrier:} new decomposition yields a CFR-like algorithm but converges in $O\left(\frac{1}{T^{\frac{3}{4}}}\right)$ instead of $O\left(\frac{1}{T^{\frac{1}{2}}}\right)$. First ever CFR like algorithm to break this barrier!
+\end{itemize}
+
+Perfect information games and single agent search: take some steps, then solve remaining subtree. If tree is too big, we break off a small chunk, and try to solve that subset. \\
+
+Idea: depth-limited solving (DLS)~\cite{brown2018depth}. In Libratus, when we solve a game, we solve it {\it all the way to the end of the game.} In things like ``deep stack" they do this depth limited solving, but in an expensive way (random subgames solved in advance). \\
+
+$\ra$ New Approach for solving DLS:
+\begin{itemize}
+    \item At the leaf nodes at the depth limited tree, we allow the other player $P_1$ to choose a continuation policy.
+    \item Solve the subgame with the current set of continuation policies
+    \item Calculate best response for $P_2$.
+    \item Add best response to set of leaf-node policies.
+\end{itemize}
+\dnote{Not sure I got the player numbers right in the above..}
+
+\begin{theorem}
+The above approach converges to Nash equilibrium.
+\end{theorem}
+
+Moreover, the above reaches very low exploitibility in a small number of iterations. \\
+
+{\bf Key Takeaways:}
+\begin{itemize}
+    \item Planning is important in imperfect information gatmes
+    \item In real time planning you must consider how the oppeonent can adapt to changes in your policy
+    \item States don't have well defined values in imperfect info games
+    \item New bot developed end-to-end on a single computer is 2nd best AI bot after Libratrus.
+\end{itemize}
+
+\subsubsection{Equilibrium Refinement}
+
+{\bf Major Point:} An issue with Nash: assumes strongest possible opponent! So, it doesn't capitalize on opponents' mistakes. \\
+
+$\ra$ Enter, refinements, which can help to improve. \\
+
+Idea: Mandate that users play each action at each information set. This enables reasonable strategies and beliefs to be computed even in non-standard parts of the game tree. Enables refinement!\\
+
+Can formulate this problem as a Linear Program (LP), parameterized by $\eps > 0$. Theory says there is an $\eps^* \in \mathbb{R}_{\geq}$ such that the LP can be computed in polynomial time and achieve good performance (finding a good ``basis"). \\
+
+But, the above induces an unusably slow algorithm for refinement (that has desirable properties). Instead, don't look for $\eps^*$, look at something a bit weaker $\ra$ gives rise to a practical algorithm. \\
+
+Bottom line: refinements of Nash Eq matter when some players are not fully rational. \\
+
+Consider Stackelberg games: extensive form games {\it with commitment}.
+\begin{itemize}
+    \item One player commits to a public mixed strategy (``leader")
+    \item Another play (``follower")
+\end{itemize}
+
+Goal is another equilibrium: ``strong" stackelberg equilibrium) assume follower breaks ties in best possible way for leader). \\
+
+$\ra$ Same issue as Nash: assumes fully rational opponent. \\
+
+Q: Is trembling-hand perfection meaningful in Stackelberg games? \\
+
+A:
+\begin{theorem}
+\begin{itemize}
+    \item Trembling-hand Stackelberg equilibrium are Stackelberg equilibrium
+    \item Finding a Stackelberg equilibrium is NP-Hard
+    \item Finding a $\tau$-Stackelberg equilibrium is NP-Hard.
+\end{itemize}
+\end{theorem}
+
+{\bf Conclusion:}
+\begin{enumerate}
+    \item Imperfect info games are important but different
+    \item Game-theoretic techniques are required to be robust against all opponents
+    \item Modern techniques for these ($=$imperfect info games) should be taught in AI courses
+    \item Talked about abstraction and its role in CFR
+    \item Finding Nash equilibria can be done scalably
+    \item May want to refine equilibria sometimes.
+\end{enumerate}
+
+Future Work:
+\begin{itemize}
+    \item Merge practical abstraction algorithm with new abstraction theory
+    \item Even bigger games! Deeper/infinite, large branching factors
+    \item Techniques that work with blackbox access to the world
+\end{itemize}
+
+And that's Thursday! Now onto the poster session.
+
+\spacerule
