@@ -218,16 +218,85 @@ Symbo does: 1) abstract theory, 2) compile formula, 3) to arithmetic circuit, 4)
 
 Sampo does: approximate Monte Carlo inference for doing approximate probabilistc inference with linear time dependency.  First sampling based algorithm for ``WMI"\\
 
-$\ra$ Both samplers beat state of the art. \\
+$\ra$ Both samplers beat state of the art.
 
 
 \dnote{Back to RL}
 
+\subsubsection{Off-Policy Deep RL by Bootstrapping the Covariate Shift}
+
+Paper by Carles Gelada and Marc Bellemare. \\
+
+TD Policy Evaluation with Linear models: samples $s \sim d_\pi, a \sim \pi, r = R(s,a), s' \sim P(\cdot \mid s, a)$. \\
+
+Linear value approximation $V_k(s) = \phi(s) \theta_k$. \\
+
+Weight update:
+\[
+\theta_{k+1} \la \theta_k + \alpha(r + \gamma V_k(s') - V_k(s)) \phi(s).
+\]
+Can treat the above weight update as application of an operator. \\
+
+Idea: also do {\it projection} operator this way: $\Pi_{d_\pi} x$. Well known result that Bellman operator converges. \\
+
+{\bf Off Policy Problem:} End up with a {\it different} operator that does not lead to convergence. Well know difficulty from Baird (Baird's counter example)~\cite{baird1995residual}. \\
+
+\ddef{Covariate Shift}{Sample from another distribution $\mu$, induces the covariate shift: $\frac{d_\pi(s)}{d_\mu(s)}$.}
+
+Yields an update rule defined by this ratio, gives an operator:
+\[
+C_{k+1} = \Pi_{d_\mu} Y c_k.
+\]
+which {\it does} converge. But, it might converge to bad behaviour. \\
+
+Idea: Can treat this as a projection into a simplex, which lets them translate the above new update rule to cooperate with neural networks. \\
+
+Interpretation of the discount here: discounted of value function relxas the operator $P_\pi$ to $\gamma P_\pi$. Similarly, treat operator $Y$ as relaxing $P_\pi$ to $\gamma P_\pi + (1-\gamma) ed_\mu$. \\
+
+{\bf Result:} $N$ step contraction factor under the discounted operator $\gamma Y$. 
+
+\begin{theorem}
+For any $n$, for any $\gamma$, can find an operator $Y$ that converges to a fixed point.
+\end{theorem}
+
+Experiment with the C51 agent (the distr. RL agent). Evaluate in ``extreme off policy tasks"), like seaquest. \\
+
+\dnote{Back to reasoning under uncertainty.}
 
 
 
-\subsubsection{Compiling Bayes Net Classifiers into Decision Graphs}
+
+\spacerule
+\subsubsection{Compiling Bayes Net Classifiers into Decision Graphs~\cite{shih2019compiling}}
 
 Paper by Andy Shih, Arthur Choi, and Adnan Darwiche. \\
 
+{\bf Goal:} Compile a (Bayes Net) classifier into a decision graph to better explain a classifier. \\
 
+
+Case study: win95pts. \\
+
+$\ra$ consider a printer with some symptons (slow printing, low toner, etc.). \\
+
+Two kinds of explanations: can you fix a set of features such that the remaining features are rirrelevant, or can we remove erreoneous features. \\
+
+{\bf Compilation:}
+\begin{enumerate}
+    \item Insight 1: recursively decompose into subclassifiers.
+    \item Insight 2: Identify subclasiffiers that are equivalent to save computation time.
+\end{enumerate}
+
+Q: How can we. given two subclassifiers $B_1$ and $B_2$, identify  if $\forall_{v \in V} B_1(v) = B_2(v)$. \\
+
+A: Goal is to compute $\Pr(C = 1 \mid v) \geq T$, which we can rewrite as a linear inequality. Problem becomes separating points on a line, so we binary search in time $O(|V|)$. \\
+
+Experiments: use classifiers from literature that we can compile successfully into small ODDs. Try win95pts, Andes, cpcs54 $\ra$ they can all be merged and reduced quite dramatically. \\
+
+Scaled this to networks with over 40 features. \\
+
+{\bf Takeaways:}
+\begin{itemize}
+    \item Classifiers have an underlying decision function
+    \item Decision functions can be compiled into an ODD
+    \item Explanations and verification are efficient on ODDs (which are otherwise intractable on Bayesian network classifiers).
+\end{itemize}
