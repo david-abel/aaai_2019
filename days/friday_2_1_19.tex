@@ -1,0 +1,233 @@
+The final day! My talk is in the RL session this morning so I unfortunately didn't make it to the keynote.
+
+\subsection{Reinforcement Learning}
+
+First, some RL.
+
+\subsubsection{Diversity-Driven Hierarchical RL~\cite{song2018diversity}}
+
+Paper by Yuhang Song, Jianyi Wang, Thomas Lukasiewicz, Zhengua Xu, and Mai Xu. \\
+
+Code at \url{github.com/YuhangSong/DEHRL} \\
+
+{\bf Focus:} Hierarchical RL (HRL) \\
+
+$\ra$ Idea: recombine sequences of basic actions to form sub-policies~\cite{sutton1999between}. \\
+
+HRL can speed up learning, transfer, add explainability. \\
+
+{\bf Game of Focus:} Overcooked. Cooking game where agents move around a grid and place objects in different locations subject to a timer. Need to place ingredients on certain objects (bread in toaster, etc.) with the goal of making food based on (randomly generated) orders given. \\
+
+Task Features:
+\begin{itemize}
+    \item Primitive actions
+    \item Abstract goals
+    \item Sparse extrinsic reward (only received when agent collects the right ingredients based on the order
+\end{itemize}
+
+Using HRL on Overcooked: can use subpolicies to move agent in each direction, then higher level policies to move agent to each destination where ingredients can be collected/placed. \\
+
+{\bf Main Idea:} Exploit and learn diversity driven policies for use in HRL. Comes from the following assumption:
+
+\begin{assumption}
+Learning different sub-policies is beneficial (popular in literature).
+\end{assumption}
+
+Their extension:
+\begin{assumption}
+With limited capability, learning sub policies far away from each one as possible is even better.
+\end{assumption}
+
+So, with this assumption, their solution:
+\begin{itemize}
+    \item Diversity of sub-policies can be measured by the {\bf distance} between the resulting states of sub-policies.
+    
+    \item Diversity-driven solution:
+    
+    $\ra$ Transition model memorize resulting states of different sub-policies
+    
+    $\ra$ Intrinsic reward generated based on if a sub-policy leads to a state that is far away from the resulting states if choosing another sub-policies.
+\end{itemize}
+
+Form a neural network that trains the many aspects of the above solution (models, policies, and so on). \\
+
+Experiments (in Overcooked):
+\begin{itemize}
+    \item Sub-policy discovery at level 1 goes to the ``five most diverse/useful states" (out of around 600).
+    \item At level 2, sub-policies fetch different ingredients at the four corners.
+\end{itemize}
+
+Experiments (in Minecraft) with no reward/supervision: goal is to break a block, build a block, or jump on a block.
+
+$\ra$ Random policies can't do anything, but their HRL approach can actually build some nice structures. \\
+
+
+
+\dnote{I'm up!}
+
+\spacerule
+\subsubsection{Towards Better Interpretability in DQN~\cite{annasamy2018towards}}
+
+Paper by Raghuram Mandyam Annasamy and Katia Sycara. \\
+
+
+{\bf Goal:} Interpretability! \\
+
+$\ra$ Important for Deep RL since most neural nets used are treated as a black box, but naturally these systems will be deployed in crucial areas soon. \\
+
+Lots of examples of seeking interpretability in supervised learning. But, it's harder in Deep RL\\
+
+Proposed Method: ``interpretable"-DQN. Keys initialized randomly and learned via backprop. \\
+
+Four loss functions:
+\begin{itemize}
+    \item Bellman Error (for $Q$ Learning)
+    \item Distributional Error (force good representations/robustness \dnote{I think, missed this one})
+    \item Reconstruction Error (force interpretable)
+    \item Diversity Error (force attention)
+\end{itemize}
+
+Intuition:
+\begin{itemize}
+    \item Use key-value pairs to enforce interpretability.
+    \item Keys act like cluster-centers
+    \item Can then evaluate/visualize these cluster centers through things like t-sne.
+    \item Pass keys through conlutional network to generate canonical states
+\end{itemize}
+
+Evaluation:
+\begin{itemize}
+    \item ``Agreement metric" used for evaluating the approach.
+    \item Induce new distribution in image space.
+    \item Random agreement will be around $1/|A|$.
+    \item In Pac-Man they find 30\% agreement vs the random (which is roughly 10\%).
+\end{itemize}
+
+Examples of memorization: Create small permutations to existing states and test what the agent does. \\
+
+Provide an interface for visualizing the reconstructions when small changes are made to the image. Find their i-DQN can do a good job of ignoring the perturbations. \\
+
+{\bf Problem:} Lots of Deep RL methods overfit!~\cite{cobbe2018quantifying,zhang2018dissection}. Can use i-DQN to explore this a bit. 
+
+
+
+\spacerule
+\subsubsection{On RL for Full-Length Game of Starcraft~\cite{pang2018reinforcement}}
+
+Paper by Zhen-Jia Pang, Ruo-Ze Liu, Zhou-Yu Meng, Yi Zhang, Yang Yu, and Tong Lu. \\
+
+Why Starcraft?
+\begin{itemize}
+    \item Game is ideal for RL
+    \item Most successful real time strategy of all time
+    \item Really hard for human and AI to play
+    \item If SC is solved, most games can be solved
+\end{itemize}
+
+\ddef{Starcraft}{Starcraft is a game where you control a base, units, and manage resources. You must build up a base and good units to destroy the other enemies.}
+
+Difficulties: Starcraft can be multi-agent, is partially observable, and requires both macro level reasoning and low level control over many units. \\
+
+Main focus: massive state-action space {\it and} long horizon until receiving reward. So, how can we solve this? \\
+
+Approach:
+\begin{itemize}
+    \item Low-level abstraction: build a building (select unit $\ra$ build building $\ra$ go back to work), or produce a unit (select building, etc.).
+    
+    $\ra$ Can be inferred from mirroring human demonstrations, gives rise to macro-actions.
+    
+    \item High-level abstraction: Learn high level policies over these macro-actions (the ``low-level" abstractions).
+\end{itemize}
+
+Experiments:
+\begin{itemize}
+    \item Map: simple64
+    \item Enemy: Terrain (built in AI)
+    \item Agent: Protoss
+    \item Fixed types of units/buildings for agent (but not enemy).
+    \item High level policy that is decomposed into:
+    \begin{enumerate}
+        \item a ``base" policy responsible for handling base building and resource management.
+        \item a ``battle" policy responsible for dealing with battle/focused on individual control.
+    \end{enumerate}
+\end{itemize}
+
+Conclusions: 1) Investigate hierarchical architecture for SC, 2) Simple yet effective training algorithm, and 3) Achieves SOTA results on SC. \\
+
+
+\spacerule
+
+\subsection{Reasoning under Uncertainty}
+
+Next some reasoning under uncertainty.
+
+\subsubsection{Collecting Online Learning of GPs in Multi-Agent Systems}
+
+Paper by Nghia Hoang, Quang Minh Hoang, Bryan Kian Hsiang Low, and Jonathon How. \\
+
+Collecting Learning Motivation:
+\begin{itemize}
+    \item Local agents that can upload local statistics
+    \item Old approach: Central server combine and broad cast
+    $\ra$ But, limitation of typical approaches: centralized risk of failure and communication/computational bottleneck.
+    
+    \item Their approach fixes these shortcomings by removing central server. 
+    
+    $\ra$ No centralized risk of failure and no computational/communication bottlenecks.
+\end{itemize}
+
+Challenges: decentralization! Not clear how to do this (especially with resource constraints). \\
+
+{\bf Goal:} Develop efficient local model representation for online update with data. \\
+
+Gaussian Process (GP prediction is {\it not efficient}:
+\begin{itemize}
+    \item Computation is cubis
+    \item Representation is quadratic
+    \item Update is cubic
+\end{itemize}
+
+Solution: exploit sparse coding $\bm{u} = u(Z)$ is distributed by a standard GP. \\
+
+Q: How can agent share models without communicating raw data? \\
+
+A: Do local (bayesian/GP) updates, then share a representation that merges these updates. Main idea is to exploit additive structure to make this shared representation from a few messages.\\
+
+
+Experiments: test on (real-world) traffic data set, characterizes different traffic phenomena. \\
+
+$\ra$ Finding: they can reduce error with more data efficiently. 
+
+
+\spacerule
+
+
+\subsubsection{Weighted Model Ingeration using Knowledge Compilation}
+
+Paper by Pedro Zuidberg Dos Martiers, Anton Dries, and Luc de Raedt. \\
+
+{\bf Setting:} Probabilistic inference.  Goal is to combine the best of continuous and discrete inference \\
+
+Knowledge compilation: take a boolean formula, compile it offline line so that you can do quick inference online. \\
+
+New Method that can handle all of 1) knowledge compilation, 2) inference of density functions, 3) exact and approximate inference, and 4) can handle poly-nomial or non-linear constraints. \\
+
+{\bf Contribution:} Can handle probability density functions while applying state of the art knowledge compilation techniques, along with two new solvers: Symbo and Sampo. \\
+
+Symbo does: 1) abstract theory, 2) compile formula, 3) to arithmetic circuit, 4) label leaves, 5) evaluate, 6) multiply by weight of continuous variables, 7) integrate. \\
+
+Sampo does: approximate Monte Carlo inference for doing approximate probabilistc inference with linear time dependency.  First sampling based algorithm for ``WMI"\\
+
+$\ra$ Both samplers beat state of the art. \\
+
+
+\dnote{Back to RL}
+
+
+
+
+\subsubsection{Compiling Bayes Net Classifiers into Decision Graphs}
+
+Paper by Andy Shih, Arthur Choi, and Adnan Darwiche. \\
+
+

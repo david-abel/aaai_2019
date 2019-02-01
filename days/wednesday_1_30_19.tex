@@ -17,14 +17,27 @@ $\ra$ Let's instead fall back to game theory. Two players play a game -- player 
     \label{fig:games}
 \end{figure}
 
-Cambrian explosion of ML research topics: used to be (2007), let's get ML to work! Then we can do vision/NLP and so on. Now, with ML working, we can go on to do loads of other things (neuroscience, security, RL, domain adaption, and so on). \\
-
+Cambrian explosion of ML research topics:
+\begin{itemize}
+    \item used to be (2007), let's get ML to work! 
+    
+    $\ra$ Then, one that works, we can do vision/NLP and so on.
+    
+    \item Now, with ML working, we can go on to do loads of other things (neuroscience, security, RL, domain adaption, and so on).
+    
+    $\ra$ So we're starting to see that happen.
+\end{itemize} 
 
 \subsubsection{Generative Modeling}
 
 Main idea: take a collection of training data, and learn a distribution that can generate similar samples~\cite{karras2017progressive}. \\
 
-Use Generative Adversarial Nets (GANs)~\cite{goodfellow2014generative}. Train a 1) generator to generate images, starting out random and a 2) discriminator, to recognize fake images from real images. These two play a game to convergence.
+Use Generative Adversarial Nets (GANs)~\cite{goodfellow2014generative}:
+\begin{itemize}
+    \item Train a 1) generator to generate images, starting out random
+    \item Train a 2) discriminator, to recognize fake images from real images.
+    \item These two play a game to convergence.
+\end{itemize}
 
 \begin{figure}[h!]
     \centering
